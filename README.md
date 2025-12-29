@@ -16,8 +16,8 @@ A high-performance calculator built with Rust and Kirigami. Accepts mathematical
 
 ## Installation
 1. Download the latest release (.tar.gz)
-2. Extract this folder.
-3. Open a terminal inside the folder.
+2. Extract the archive.
+3. Open a terminal inside the extracted folder.
 4. Run: `sudo ./install.sh`
 5. Install the dependencies before running
 
