@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=Utility;Calculator;
+Comment=A high-performance calculator built with Rust and Kirigami
+Exec=/home/shaurya/Scripts/Rust/rust_kirigami_calc/target/release/rust_kirigami_calc
+Icon=pcbcalculator
+Name=Rust Calculator
+NoDisplay=false
+Path=
+PrefersNonDefaultGPU=false
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-KDE-SubstituteUID=false
+X-KDE-Username=
