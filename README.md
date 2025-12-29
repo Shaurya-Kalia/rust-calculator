@@ -12,7 +12,7 @@ A high-performance calculator built with Rust and Kirigami. Accepts mathematical
 
 **Arch Linux:**
 
-`sudo pacman -S kf6-kirigami qt6-declarative`
+`sudo pacman -S kirigami qt6-declarative`
 
 ## Installation
 1. Download the latest release (.tar.gz)
