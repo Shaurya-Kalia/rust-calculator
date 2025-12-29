@@ -21,33 +21,82 @@ mod my_object {
     }
 }
 
-// STEP 2: IMPLEMENTATION
-// The actual logic lives outside the bridge module.
-// In src/cxxqt_object.rs
-
-// ... inside src/cxxqt_object.rs
 
 impl my_object::RustCalculator {
     pub fn evaluate_expression(self: Pin<&mut Self>, expression: &QString) {
         let raw_input = expression.to_string();
 
-        let re = ::regex::Regex::new(r"(\d+)!").unwrap();
-        let processed_input = re.replace_all(&raw_input, "fact($1)");
+        // 1. SMART PRE-PROCESSOR (Handles '!' on numbers AND parentheses)
+        let processed_input = preprocess_expression(&raw_input);
 
+        // 2. Setup Context
         let mut ctx = ::meval::Context::new();
         ctx.func("fact", |x| {
             let n = x as u64;
             if n > 170 { return f64::INFINITY; }
             (1..=n).fold(1.0, |acc, val| acc * (val as f64))
         });
+        // Bind 'pi' explicitly to ensure high precision (meval defaults to standard pi, but good to be safe)
+        ctx.var("pi", std::f64::consts::PI);
 
+        // 3. Evaluate
         let result_string = match ::meval::eval_str_with_context(&processed_input, &ctx) {
-            Ok(val) => format_smart(val), // Use our new formatter
+            Ok(val) => format_smart(val),
             Err(_) => "Invalid Expression".to_string(),
         };
 
         self.set_display_text(QString::from(&result_string));
     }
+}
+
+
+fn preprocess_expression(input: &str) -> String {
+    let mut expr = input.to_string();
+
+    // Keep finding '!' until none are left
+    while let Some(idx) = expr.find('!') {
+        let chars: Vec<char> = expr.chars().collect();
+        let mut start = idx - 1;
+
+        // Safety check: if '!' is at start, it's invalid, just remove it to avoid panic
+        if idx == 0 {
+            expr.remove(0);
+            continue;
+        }
+
+        // Logic: Scan backwards to find the operand
+        if chars[start] == ')' {
+            // Case 1: It's a group like (1+2)!
+            let mut depth = 1;
+            while start > 0 {
+                start -= 1;
+                if chars[start] == ')' { depth += 1; }
+                else if chars[start] == '(' { depth -= 1; }
+
+                if depth == 0 { break; }
+            }
+        } else {
+            // Case 2: It's a number/variable like 123! or pi!
+            // Scan back while char is a digit, letter, or dot
+            while start > 0 {
+                let prev = chars[start - 1];
+                if prev.is_alphanumeric() || prev == '.' || prev == '_' {
+                    start -= 1;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // Extract the part to wrap (e.g., "123" or "(1+2)")
+        let operand: String = chars[start..idx].iter().collect();
+
+        // Replace "operand!" with "fact(operand)"
+        // This removes the '!' so the loop eventually ends
+        expr.replace_range(start..=idx, &format!("fact({})", operand));
+    }
+
+    expr
 }
 
 // --- HELPER FUNCTION ---
