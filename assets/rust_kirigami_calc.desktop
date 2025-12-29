@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Rust Calculator
+Comment=A high-performance calculator built with Rust and Kirigami
+Exec=/usr/local/bin/rust_kirigami_calc
+Icon=rust_kirigami_calc
+Categories=Utility;Calculator;
+Terminal=false
