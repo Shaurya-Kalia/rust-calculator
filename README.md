@@ -1,6 +1,10 @@
 # rust-calculator
 A high-performance calculator built with Rust and Kirigami. Accepts mathematical arguments as natural expressions and displays the result. No frills or thrills. Primarily uses mavel crate for parsing. Tested only on Arch with Qt 6.10.1 on kde desktop.
 
+<img width="542" height="762" alt="image" src="https://github.com/user-attachments/assets/8a571de2-12ed-45a2-9315-e2433719bc02" /> <img width="542" height="762" alt="image" src="https://github.com/user-attachments/assets/f03b1afd-0e02-40dc-9702-65f3f5e7a48a" />
+
+
+
 ## Dependencies
 **Ubuntu/Debian:**
 
