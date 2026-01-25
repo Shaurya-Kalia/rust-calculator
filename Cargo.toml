@@ -1,14 +1,15 @@
 [package]
 name = "rust_kirigami_calc"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 cxx = "1.0"
-cxx-qt = "0.6"
-cxx-qt-lib = "0.6"
+cxx-qt = "0.8"
+cxx-qt-lib = "0.8"
+cxx-qt-lib-extras = "0.8"
 meval = "0.2"    # Changed from 0.4 to 0.2
 regex = "1"      # Added for handling '!'
 
 [build-dependencies]
-cxx-qt-build = "0.6"
+cxx-qt-build = "0.8"

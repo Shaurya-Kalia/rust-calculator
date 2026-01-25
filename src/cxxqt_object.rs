@@ -8,6 +8,7 @@ mod my_object {
         type QString = cxx_qt_lib::QString;
     }
 
+    #[auto_cxx_name]
     unsafe extern "RustQt" {
         #[qobject]
         #[qml_element]
