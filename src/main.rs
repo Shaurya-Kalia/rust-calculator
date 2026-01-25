@@ -1,10 +1,11 @@
-use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QUrl};
+use cxx_qt_lib::{QQmlApplicationEngine, QUrl};
+use cxx_qt_lib_extras::QApplication;
 
 //  CRITICAL FIX: This line registers the file so it gets compiled.
 mod cxxqt_object;
 
 fn main() {
-    let mut app = QGuiApplication::new();
+    let mut app = QApplication::new();
     let mut engine = QQmlApplicationEngine::new();
 
     // Load the QML file
