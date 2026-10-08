@@ -10,9 +10,29 @@ Kirigami.ApplicationWindow {
     height: 600
     title: "Rust Calculator"
 
-    // 1. Instantiate the Rust Logic
     RustCalculator {
         id: calculator
+    }
+
+    function calculate() {
+        var expression = inputField.text.trim()
+        if (expression.length === 0)
+            return
+
+        calculator.evaluateExpression(expression)
+        if (calculator.displayText !== "Invalid Expression" &&
+            calculator.displayText !== "Math Error" &&
+            !calculator.displayText.startsWith("∞")) {
+            historyModel.insert(0, { expression: expression, result: calculator.displayText })
+            if (historyModel.count > 30)
+                historyModel.remove(historyModel.count - 1)
+        }
+    }
+
+    function clearCalculator() {
+        inputField.text = ""
+        calculator.clear()
+        inputField.forceActiveFocus()
     }
 
     pageStack.initialPage: Kirigami.Page {
@@ -23,7 +43,6 @@ Kirigami.ApplicationWindow {
             anchors.margins: Kirigami.Units.gridUnit
             spacing: Kirigami.Units.largeSpacing
 
-            // 2. RESULT DISPLAY (Scrollable + Copyable)
             ScrollView {
                 id: resultScroll
                 Layout.fillWidth: true
@@ -31,88 +50,182 @@ Kirigami.ApplicationWindow {
                 Layout.alignment: Qt.AlignRight
 
                 TextArea {
-                    text: calculator.displayText == "" ? "0" : calculator.displayText
-
-                    // Force text to wrap by constraining width
+                    id: resultArea
+                    text: calculator.displayText === "" ? "0" : calculator.displayText
                     width: resultScroll.availableWidth
-
                     color: "white"
                     font.pointSize: 26
                     horizontalAlignment: Text.AlignRight
-
-                    readOnly: true         // Output only
-                    selectByMouse: true    // Allow copying
+                    readOnly: true
+                    selectByMouse: true
                     wrapMode: Text.WrapAnywhere
                     background: null
+
+                    Menu {
+                        id: resultContextMenu
+
+                        MenuItem {
+                            text: "Copy"
+                            enabled: resultArea.selectedText.length > 0
+                            onTriggered: resultArea.copy()
+                        }
+
+                        MenuItem {
+                            text: "Select All"
+                            onTriggered: resultArea.selectAll()
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.RightButton
+                        propagateComposedEvents: true
+                        onClicked: resultContextMenu.popup()
+                    }
                 }
             }
 
             Kirigami.Separator { Layout.fillWidth: true }
 
-            // 3. INPUT FIELD (Focus + Enter Key)
             TextField {
                 id: inputField
                 placeholderText: "e.g. 23*4/(3^3+5!)"
                 Layout.fillWidth: true
                 font.pointSize: 14
-
-                // Focus: Start typing immediately
                 focus: true
                 Component.onCompleted: forceActiveFocus()
+                onAccepted: root.calculate()
 
-                // Trigger calculation on 'Enter'
-                onAccepted: {
-                    calculator.evaluateExpression(this.text)
+                Menu {
+                    id: inputContextMenu
+
+                    MenuItem {
+                        text: "Undo"
+                        enabled: inputField.canUndo
+                        onTriggered: inputField.undo()
+                    }
+
+                    MenuItem {
+                        text: "Redo"
+                        enabled: inputField.canRedo
+                        onTriggered: inputField.redo()
+                    }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "Cut"
+                        enabled: inputField.selectedText.length > 0
+                        onTriggered: inputField.cut()
+                    }
+
+                    MenuItem {
+                        text: "Copy"
+                        enabled: inputField.selectedText.length > 0
+                        onTriggered: inputField.copy()
+                    }
+
+                    MenuItem {
+                        text: "Paste"
+                        enabled: inputField.canPaste
+                        onTriggered: inputField.paste()
+                    }
+
+                    MenuSeparator {}
+
+                    MenuItem {
+                        text: "Select All"
+                        enabled: inputField.length > 0
+                        onTriggered: inputField.selectAll()
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    propagateComposedEvents: true
+                    onClicked: inputContextMenu.popup()
                 }
             }
 
             Label {
-                text: "Supports: +, -, *, /, ^, !, sin(pi), log(), etc."
+                text: "Supports: +, -, *, /, ^, !, sin(pi), log(), ans, etc."
                 color: Kirigami.Theme.disabledTextColor
                 font.pointSize: 10
             }
 
-            // 4. BUTTONS (Responsive Grid)
             GridLayout {
                 Layout.fillWidth: true
                 columnSpacing: Kirigami.Units.largeSpacing
                 rowSpacing: Kirigami.Units.largeSpacing
-
-                // If window is thin (<350px), stack buttons vertically.
-                // Otherwise, put them side-by-side.
                 columns: root.width < 350 ? 1 : 2
 
                 Button {
                     text: "Calculate"
                     Layout.fillWidth: true
                     highlighted: true
-                    onClicked: {
-                        calculator.evaluateExpression(inputField.text)
-                    }
+                    onClicked: root.calculate()
                 }
 
                 Button {
                     text: "Clear (Esc)"
                     Layout.fillWidth: true
+                    onClicked: root.clearCalculator()
+                }
+            }
+
+            Kirigami.Heading {
+                text: "History"
+                level: 3
+                visible: historyModel.count > 0
+            }
+
+            ListView {
+                id: historyView
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                visible: historyModel.count > 0
+                model: ListModel { id: historyModel }
+                spacing: Kirigami.Units.smallSpacing
+
+                delegate: ItemDelegate {
+                    width: historyView.width
+                    height: historyLine.implicitHeight + Kirigami.Units.largeSpacing
                     onClicked: {
-                        inputField.text = ""
-                        calculator.displayText = ""
+                        inputField.text = expression
                         inputField.forceActiveFocus()
+                        inputField.cursorPosition = inputField.length
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Kirigami.Units.smallSpacing
+                        anchors.rightMargin: Kirigami.Units.smallSpacing
+                        spacing: 0
+
+                        Label {
+                            id: historyLine
+                            text: expression + " = " + result
+                            Layout.fillWidth: true
+                            color: Kirigami.Theme.textColor
+                            elide: Text.ElideRight
+                        }
                     }
                 }
             }
 
-            // 5. SHORTCUTS
+            Item { Layout.fillHeight: historyModel.count === 0 }
+
             Shortcut {
                 sequence: "Esc"
-                onActivated: {
-                    inputField.text = ""
-                    calculator.displayText = ""
-                    inputField.forceActiveFocus()
-                }
+                onActivated: root.clearCalculator()
             }
 
-            Item { Layout.fillHeight: true } // Spacer to push everything up
+            Shortcut {
+                sequence: "Ctrl+L"
+                onActivated: root.clearCalculator()
+            }
         }
     }
 }
