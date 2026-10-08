@@ -27,3 +27,31 @@ A high-performance calculator built with Rust and Kirigami. Accepts mathematical
 
 ## Uninstallation
 Run: `sudo rm /usr/local/bin/rust_kirigami_calc /usr/share/applications/rust_kirigami_calc.desktop`
+
+## Compilation
+In case the build is not compatible with Qt version, consider manual compilation (install dependencies as per your distro such as rust, qt6, C++ compiler beforehand).
+
+Clone the repository and enter the project directory:
+
+```bash
+git clone https://github.com/Shaurya-Kalia/rust-calculator.git
+cd rust-calculator
+```
+
+Build the release binary with Cargo:
+
+```bash
+cargo build --release
+```
+
+The compiled binary will be located at:
+
+```text
+target/release/rust_kirigami_calc
+```
+
+You can run it directly with:
+
+```bash
+./target/release/rust_kirigami_calc
+```
