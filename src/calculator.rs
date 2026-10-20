@@ -1,9 +1,3 @@
-//! Pure calculator logic, independent of Qt.
-//!
-//! The expression engine is Exmex. A small compatibility layer keeps the
-//! calculator's original user-facing syntax, most notably postfix `!` and
-//! lowercase `pi`.
-
 use exmex::{FloatOpsFactory, MakeOperators, Operator};
 use exmex::{Express, FlatEx};
 
@@ -14,12 +8,6 @@ impl MakeOperators<f64> for CalculatorOps {
     fn make<'a>() -> Vec<Operator<'a, f64>> {
         let mut ops = FloatOpsFactory::<f64>::make();
 
-        // Exmex evaluates expression nodes independently. A final cleanup is
-        // too late for numerically unstable intermediates: for example,
-        // sin(PI) is a tiny non-zero f64, and dividing by it amplifies the
-        // residue before the final result can be cleaned. Replace the
-        // transcendental operators with calculator-aware versions so cleanup
-        // happens at the operation that introduces the floating-point error.
         const NORMALIZED_UNARY_OPS: &[&str] = &[
             "sin", "cos", "tan",
             "asin", "acos", "atan",
@@ -102,11 +90,6 @@ fn normalized_log2(x: f64) -> f64 { normalize_transcendental(x.log2()) }
 
 type CalculatorExpression = FlatEx<f64, CalculatorOps>;
 
-/// Evaluate an expression while preserving the calculator's existing syntax.
-///
-/// `ans` is the previous successful result. Exmex identifies variables in
-/// alphabetical order, so we construct the value vector from the parsed
-/// expression's actual variable list rather than assuming a fixed position.
 pub fn evaluate(input: &str, ans: Option<f64>) -> Result<f64, exmex::ExError> {
     let processed = preprocess_expression(input);
     let expression: CalculatorExpression = CalculatorExpression::parse(&processed)?;
@@ -124,12 +107,7 @@ pub fn evaluate(input: &str, ans: Option<f64>) -> Result<f64, exmex::ExError> {
 }
 
 /// Removes numerical artefacts that are below normal calculator precision.
-///
-/// Exmex evaluates floating-point expressions using `f64`, so values such as
-/// `0.1 + 0.2` can otherwise surface as `0.30000000000000004`, and
-/// `sin(pi)` can surface as a tiny residual around zero. We do not pretend
-/// this makes f64 arithmetic exact; this is a calculator-facing normalization
-/// step that removes errors well below 15 significant decimal digits.
+
 fn clean_float(value: f64) -> f64 {
     if !value.is_finite() {
         return value;
